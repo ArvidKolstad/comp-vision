@@ -79,7 +79,7 @@ def pflat(x:np.ndarray):
     return y
 
 
-def plot_points_2D(points: np.ndarray,axis = None ,**kwargs):
+def plot_points_2D(points: np.ndarray,ax = None ,**kwargs):
     """
     Plots 2D points.
     
@@ -88,10 +88,8 @@ def plot_points_2D(points: np.ndarray,axis = None ,**kwargs):
     points : ndarray (2,n)
         Array representing n two dimensional points in Cartesian coordinates.
     """
-    if not axis:
+    if not ax:
         fig, ax = plt.subplots(1,1)
-    else:
-        ax = axis
 
     ax.scatter(points[0,:], points[1,:], **kwargs)
     ax.set_xlabel("x")
@@ -165,6 +163,7 @@ Plot this point in the same image.
 # Load data
 # Your code here
 data = sp.io.loadmat('./data/compEx2.mat')
+image = plt.imread("./data/compEx2.jpg")
 p1 = data["p1"]
 p2 = data["p2"]
 p3 = data["p3"]
@@ -181,6 +180,7 @@ pi = pflat(sp.linalg.null_space(lines[1:3]))
 # Show the image and plot the points in the image 
 # Your code here
 plt.figure()
+plt.imshow(image,cmap="grey")
 plt.scatter(p1[0],p1[1], label="p1")
 plt.scatter(p2[0],p2[1], label = "p2")
 plt.scatter(p3[0],p3[1], label="p3")
@@ -223,7 +223,7 @@ def point_line_distance_2D(point, line):
     """
 
     # Your code here
-    distance = np.linalg.norm(line*point)/np.sqrt(np.sum(line**2))
+    distance = np.abs(point.T@line)/np.sqrt(np.sum(line**2))
 
     return distance
 ```
@@ -237,9 +237,9 @@ print(f"Distance: {dist}")
 
 (*Include answers to all questions marked in bold.*)
 #
-The lines does not seem to be parallel, in 3 dimentions. Because the points all lay in the image plane they at least share one dimention but, the slope of them does not seem to be parallel.
+In 3 dimensions, the lines seems to be parallel, they are parallel to the ground and the outlining of the building and therefore it seems like they are parallel.
 
-The gap seem pretty small but this is just by chance. This is because this line is independent och the points p2 and p3, because it was only created by the points in p1 and the point $\pi$ was created by the intersection of the l2 and l3 lines which depends on the points p2 and p3. If we choose different points for p1 we could do the distance arbitrary large.
+The distance between the line and the intersection is close and this is expected because of the lines being parallel, because the Pin hole model makes all parallel lines intersect at a common point, and and therefore the distance is small and the distance that we measure is either that the lines aren't compleatly parallel or that there is some measurement errors in the points coordinates.
 
 
 # Projective Transformations
@@ -336,7 +336,7 @@ def plot_camera(camera_matrix, s,ax=None,**kwargs ):
     camera_name : str
         Name of the camera position
     
-    ax : mpl_toolkits.mplot3d.axes3d.Axes3D, optional
+    axis : mpl_toolkits.mplot3d.axes3d.Axes3D, optional
         Matplotlib 3D axes on which to plot the camera. If None,
         a new 3D axes is created. Default is None.
     """
@@ -349,7 +349,7 @@ def plot_camera(camera_matrix, s,ax=None,**kwargs ):
     else:
         fig = plt.figure()
         ax =fig.add_subplot(projection="3d")
-        plt.arrow(*camera_center, color="black")
+        plt.scatter(*camera_center, color="black")
         plt.quiver(*camera_center,*principal_axis, length=s ,**kwargs )
 ```
 
@@ -362,9 +362,9 @@ fig = plt.figure(figsize = (8,8))
 ax =fig.add_subplot(projection="3d")
 ax.set_aspect('equal')
 points_reshaped = pflat(U)[:-1]
-plot_points_3D(points_reshaped, ax, color="blue", s=1, alpha=0.4)
-plot_camera(P1,10, ax, label="Camera 1", color= "orange")
-plot_camera(P2,10, ax, label="Camera 2", color="red")
+plot_points_3D(points_reshaped, ax = ax, color="blue", s=1, alpha=0.4)
+plot_camera(P1,10, ax = ax, label="Camera 1", color= "orange")
+plot_camera(P2,10, ax = ax, label="Camera 2", color="red")
 ax.view_init(10,-150, vertical_axis ='x')
 fig.legend()
 fig.show()
@@ -388,6 +388,7 @@ plt.imshow(img2, cmap='gray')
 
 (*Include answers to all questions marked in bold.*)
 #
+Yes the results look reasonable, the points links up to the images well and it outlines the statue, and therefore we can be quite certain that the we have done the transformations correctly.
 
 
 #### *Theoretical exercise 8* (OPTIONAL, 10 optional points, see pdf)
@@ -413,7 +414,7 @@ v = data["v"]
 corners = data["corners"]
 fig,ax = plt.subplots(figsize= (8,8))
 ax.yaxis.set_inverted(True)
-plot_points_2D(corners, axis = ax)
+plot_points_2D(corners, ax = ax)
 ax.imshow(poster,cmap="grey")
 fig.show()
 
@@ -421,6 +422,7 @@ fig.show()
 
 #### Your answer here: 
 #
+The origin in these coordinates is in the top left corner which is the standard way to show where the pixels are located in pictures.
 
 To be able to use the formulas derived in Theoretical Exercise 8, we must first ensure that we have calibrated cameras.
 To do this, normalize the corner points by multiplying with $K^{-1}$ and plot them in a new 2D-figure. Use `ax.yaxis.set_inverted(True)` to make the y-axis point downwards (as for the previous image) and set equal aspect ratio.
@@ -433,7 +435,7 @@ corrected_corners = np.matmul(K_inv ,corners)
 
 fig,ax = plt.subplots(figsize= (8,8))
 ax.yaxis.set_inverted(True)
-plot_points_2D(corrected_corners, axis = ax)
+plot_points_2D(corrected_corners, ax = ax)
 fig.show()
 
 ```
@@ -441,6 +443,7 @@ fig.show()
 
 #### Your answer here: 
 #
+Here the origin has moved to around the middle of the picture and we can interpret this position as the cameras position when it took the picture.
 
 Since the inner parameters $K$ have been removed our calibrated camera is $[I \ 0]$.
 Using the results from Theoretical Exercise 8, compute the 3D points in the plane `v` that project onto the corner points.
@@ -454,7 +457,7 @@ pi  = pflat(v)[:3]
 #print(pi.shape)
 #print(corrected_corners.shape)
 lamb= -pi.T@corrected_corners
-real_world_corners = corrected_corners/lamb
+corners_3D = corrected_corners/lamb
 #print(real_world_corners)
 
 
@@ -466,9 +469,9 @@ p_1 = np.hstack((np.identity(3),np.zeros(3).reshape(3,1)))
 fig = plt.figure(figsize = (8,8))
 ax =fig.add_subplot(projection="3d")
 ax.set_aspect('equal')
-plot_points_3D(corrected_corners, ax, color="red", s=10, alpha=1, label="image corners")
-plot_points_3D(real_world_corners, ax, color="blue", s=10, alpha=1, label="real world corners")
-plot_camera(p_1,2, ax, label="Camera 1", color= "orange")
+plot_points_3D(corrected_corners, ax = ax, color="red", s=10, alpha=1, label="image corners")
+plot_points_3D(corners_3D, ax = ax, color="blue", s=10, alpha=1, label="real world corners")
+plot_camera(p_1,2, ax = ax, label="Camera 1", color= "orange")
 #ax.view_init(90,0, vertical_axis ='x')
 fig.legend()
 fig.show()
@@ -491,21 +494,24 @@ Compute the new camera and plot in the same figure. (Don't forget to ensure equa
 # Compute P2, the camera matrix for camera 2
 
 # Your code here
-P2 = None
+r = np.array([[np.cos(np.pi/5), 0, np.sin(np.pi/5)],[0,1,0], [-np.sin(np.pi/5), 0,np.cos(np.pi/5)]])
+t = -r@np.array([2.5,0,0]).reshape(3,1)
+p_2 = np.hstack((r,t))
+
+camera_center,axis = camera_center_and_axis(p_2)
 
 # Print the camera matrix
-print(f"Camera matrix 2:\n{P2}")
+print(f"Camera matrix 2:\n{p_2}")
 
 # Plot the 3D points and both cameras in the same plot
-# Example code:
-# plt.figure(12)
-# ax = plt.axes(projection='3d')
-# ax.view_init(-30, -100)
-# plot_points_3D(corners_3D, ax, s=20)
-# plot_camera(P1, 1, ax)
-# plot_camera(P2, 1, ax)
-# axis3D_equal()
-# plt.show()
+fig = plt.figure(12)
+ax = plt.axes(projection='3d')
+ax.view_init(-30, -100)
+plot_points_3D(corners_3D, ax=ax, s=20)
+plot_camera(p_1, 1, ax=ax)
+plot_camera(p_2, 1, ax=ax)
+ax.set_box_aspect((1, 1, 1))
+plt.show()
 
 # Your code here 
 ```
@@ -518,16 +524,37 @@ Also, project the 3D points into the same image using the camera matrix. Does th
 ```{python}
 # Compute the homography in TE8 and transform the normalized corner points to the new (virtual) image
 # Your code here
+r = p_2[:,:3]
+t = p_2[:,3].reshape(3,1)
+h = r - t@pi.T
+
 
 # Plot the transformed corners in a new figure
 # Your code here
 
+p_2_corners = pflat(h@corrected_corners)
+print(f"Corners in camera 2 with camera 1 coordinates: \n{p_2_corners}")
+fig, ax = plt.subplots(figsize = (8,8))
+ax.set_title("Corners in camera 2 with camera 1 coordinates")
+plot_points_2D(p_2_corners, ax =ax)
+plt.show()
+
 # Also project the 3D points into the same image using the camera matrix
 # Your code here
+fig, ax = plt.subplots(figsize = (8,8))
+print(f"Corners in camera 2 with world coordinates: \n{pflat(p_2@np.vstack((corners_3D, np.ones(4))))}")
+
+plot_points_2D(pflat(p_2@np.vstack((corners_3D, np.ones(4)))), ax = ax)
+ax.set_title("Corners in camera 2 with world coordinates")
+plt.show()
+
+
+
 ```
 
 #### Your answer here: 
 #
+Yes I think they do, because we have a picture from the side, the corners further away should get a smalled distance between them and the corners closer to the cameras position should have a larger distance between them.
 
 We now have a homography that takes normalized points in the first camera and transforms them to normalized points in the second camera.
 To remove the need for normalization we simply include the normalization in the homography.
@@ -545,7 +572,16 @@ Transform the original image and the corner points using the homography $H_{tot}
 ```{python}
 # Transform the original image and the corner points using the homography H_tot
 # Your code here
+H_tot =K @ h @K_inv
+transformed_img = cv2.warpPerspective(poster, H_tot, (poster.shape[1], poster.shape[0]))
+transformed_corners = pflat(H_tot@corners)
 
 # Plot transformed image and corner points
 # Your code here
+fig,ax = plt.subplots(figsize =(8,8))
+ax.imshow(transformed_img, cmap="grey")
+plot_points_2D(transformed_corners, ax =ax)
+
+
 ```
+
