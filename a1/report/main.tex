@@ -1,0 +1,447 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+
+% ---------- Notation ----------
+\newcommand{\vb}[1]{\mathbf{#1}}
+\newcommand{\vect}[1]{
+    \begin{pmatrix}#1
+\end{pmatrix}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\RR}{\mathbb{R}}
+
+% ---------- Consistent layout ----------
+% Every exercise:  \exercise{n}
+% Every sub-question: \part{label}{short description}
+% Every final result: \begin{answer} ... \end{answer}
+\newcommand{\exercise}[1]{
+\section*{Exercise #1}}
+\newcommand{\task}[2]{
+\subsection*{#1\quad\normalfont\textit{#2}}}
+\newtcolorbox{answer}{colback=gray!8,colframe=gray!60,boxrule=0.5pt,
+    arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+fontupper=\normalsize,before upper={\textbf{Answer.}\ }}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\title{Assignment 1  Theoretical Exercises}
+\author{Computer Vision, 2026 \\ Arvid Kolstad}
+\date{}
+
+\begin{document}
+\maketitle
+
+% =====================================================================
+\exercise{1}
+
+Given the homogeneous points
+\[
+    \vb{x}_1 = \vect{-4\\3\\1},\qquad
+    \vb{x}_2 = \vect{4\\-5\\-2},\qquad
+    \vb{x}_3 = \vect{-6\lambda \\12\lambda \\3\lambda}.
+\]
+
+\task{(1)}{Cartesian coordinates}
+
+Divide each point by its last coordinate:
+\[
+    \vb{x}_1 \;\mapsto\; \left(\tfrac{-4}{1},\tfrac{3}{1}\right),\qquad
+    \vb{x}_2 \;\mapsto\; \left(\tfrac{4}{-2},\tfrac{-5}{-2}\right),\qquad
+    \vb{x}_3 \;\mapsto\;
+    \left(\tfrac{-6\lambda}{3\lambda},\tfrac{12\lambda}{3\lambda}\right).
+\]
+\begin{answer}
+    $\vb{x}_1 \text{ maps to } (-4,\,3)$, \quad $\vb{x}_2 \text{ maps to }
+    (-2,\,\tfrac{5}{2})$, \quad $\vb{x}_3  \text{ maps to }(-2,\,4)$.
+\end{answer}
+
+\task{(2)}{Interpretation of $\vb{x}_4$}
+
+\[
+    \vb{x}_4 = \vect{5\\-4\\0}.
+\]
+Replace the last coordinate by a small number $\varepsilon$. The
+corresponding 2D point is
+\[
+    \left(\frac{5}{\varepsilon},\,\frac{-4}{\varepsilon}\right).
+\]
+As $\varepsilon \to 0$ this point goes to infinity in the
+direction $(5,-4)$.
+\begin{answer}
+    $\vb{x}_4$ is a point at infinity (a vanishing point) in the
+    direction $(5,-4)$.
+\end{answer}
+
+\task{(3)}{Are $\vb{x}_4$ and $\vb{x}_5$ the same point?}
+\[
+    \vb{x}_5 = \vect{5\\-3\\0},\qquad
+\]
+By the argument in (2), $\vb{x}_4$ goes to infinity in the
+direction $(5,-4)$,
+while $\vb{x}_5$ goes to infinity in the direction $(5,-3)$. These
+directions are not the same.
+\begin{answer}
+    No, $\vb{x}_4 \neq \vb{x}_5$, since they are points at infinity
+    in different directions.
+\end{answer}
+
+% =====================================================================
+\exercise{2}
+
+\task{(4)}{Intersection of $\vb{l}_1$ and $\vb{l}_2$}
+
+\[
+    \vb{l}_1 = \vect{1\\3\\1},\qquad \vb{l}_2 = \vect{2\\-1\\1}.
+\]
+A point $\vb{x}=(x,y,z)^T$ lies on a line $\vb{l}$ if $\vb{l}^T\vb{x}=0$.
+The intersection must lie on both lines:
+\[
+    \begin{cases}
+        \vb{l}_1^T\vb{x} = 0\\
+        \vb{l}_2^T\vb{x} = 0
+    \end{cases}
+    \;\Longrightarrow\;
+    \begin{cases}
+        x + 3y + z = 0\\
+        2x - y + z = 0
+    \end{cases}
+\]
+Set $z=1$. Subtracting the equations gives $-x + 4y = 0$, i.e.\ $x = 4y$.
+Inserting into the second equation gives $7y = -1$, so
+\[
+    y = -\tfrac{1}{7},\qquad x = -\tfrac{4}{7}.
+\]
+\begin{answer}
+    $\vb{x} = \left(-\tfrac{4}{7},\,-\tfrac{1}{7},\,1\right)^T$,
+    which in $\RR^2$ is the point
+    $\left(-\tfrac{4}{7},\,-\tfrac{1}{7}\right)$.
+\end{answer}
+
+\task{(5)}{Intersection of $\vb{l}_3$ and $\vb{l}_4$}
+
+\[
+    \vb{l}_3 = \vect{2\\0\\2},\qquad \vb{l}_4 = \vect{-3\\0\\3}.
+\]
+From the line equation:
+\[
+    \begin{cases}
+        2x + 2z = 0\\
+        -3x + 3z = 0
+    \end{cases}
+    \;\Longrightarrow\;
+    \begin{cases}
+        x = -z\\
+        x = z
+    \end{cases}
+    \;\Longrightarrow\; x = z = 0,
+\]
+while $y$ is free.
+\begin{answer}
+    $\vb{x} = (0,\,1,\,0)^T$. This is a vanishing point: the
+    intersection lies at infinity in the $y$-direction.
+\end{answer}
+
+\task{(6)}{Line through $x_1$ and $x_2$}
+
+\[
+    x_1 = (1,3) \;\Rightarrow\; \vb{x}_1 = \vect{1\\3\\1},\qquad
+    x_2 = (2,-1) \;\Rightarrow\; \vb{x}_2 = \vect{2\\-1\\1}.
+\]
+The line must satisfy $\vb{l}^T\vb{x}_1 = \vb{l}^T\vb{x}_2 = 0$. This
+is the same system as in (4),
+so we have already calculated it to be $\vb{l} =
+\left(-\tfrac{4}{7},-\tfrac{1}{7},1\right)^T$. Check:
+\[
+    -\tfrac{4}{7} - \tfrac{3}{7} + 1 = 0,\qquad
+    -\tfrac{8}{7} + \tfrac{1}{7} + 1 = 0.
+\]
+This is because in $\PP^2$ the equation is a plane through the origin
+that contains the points
+$\vb{x}_1$ and $\vb{x}_2$. When collapsing $\PP^2$ to $\RR^2$, the
+plane becomes the line between $x_1$ and $x_2$.
+\begin{answer}
+    $\vb{l} = \left(-\tfrac{4}{7},\,-\tfrac{1}{7},\,1\right)^T$.
+\end{answer}
+
+% =====================================================================
+\exercise{3}
+
+\task{(7)}{Why the null space gives the intersection}
+
+% NOTE: written as a sum in the original notes; see the comments
+% in the chat.
+\[
+    M\vb{x} =
+    [\vb{l}_2^T\vb{x} ,\vb{l}_1^T\vb{x}]^T.
+\]
+This is just the line equation for the two lines. Since we know that
+these must hold for the lines then the vector that gets created must
+be the zero vector.
+\begin{answer}
+    A vector in the null space of $M$ satisfies the line equation of
+    both lines, so it is their intersection point.
+\end{answer}
+
+\task{(8)}{Are there other solutions?}
+
+Of course $\vb{x}=\vb{0}$ is also solution to this equation, but this
+does not have a representation in $\RR^2$ and can therefore be
+disregarded for our case.
+
+\begin{answer}
+    There are no other points in $\PP^2$ that solve the equation,
+    except the zero-vector.
+\end{answer}
+
+% =====================================================================
+\exercise{4}
+
+\[
+    H = \vect{1&1&1\\-1&1&1\\0&0&1},\qquad
+    \vb{x}_1 = \vect{1\\0\\1},\qquad
+    \vb{x}_2 = \vect{0\\1\\1}.
+\]
+
+\task{(a)}{Transformed points}
+
+\[
+    \vb{y}_1 = H\vb{x}_1 = \vect{2\\0\\1},\qquad
+    \vb{y}_2 = H\vb{x}_2 = \vect{2\\2\\1}.
+\]
+\begin{answer}
+    $\vb{y}_1 = (2,0,1)^T$, \quad $\vb{y}_2 = (2,2,1)^T$.
+\end{answer}
+
+\task{(b)}{Lines through the points}
+
+Line $\vb{l}_1 = (a,b,c)^T$ through $\vb{x}_1$ and $\vb{x}_2$:
+\[
+    \begin{cases}
+        \vb{l}_1^T\vb{x}_1 = 0\\
+        \vb{l}_1^T\vb{x}_2 = 0
+    \end{cases}
+    \;\Longrightarrow\;
+    \begin{cases}
+        a + c = 0\\
+        b + c = 0
+    \end{cases}
+    \;\overset{c=1}{\Longrightarrow}\; a = b = -1.
+\]
+Line $\vb{l}_2 = (a,b,c)^T$ through $\vb{y}_1$ and $\vb{y}_2$:
+\[
+    \begin{cases}
+        \vb{l}_2^T\vb{y}_1 = 0\\
+        \vb{l}_2^T\vb{y}_2 = 0
+    \end{cases}
+    \;\Longrightarrow\;
+    \begin{cases}
+        2a + c = 0\\
+        2a + 2b + c = 0
+    \end{cases}
+    \;\overset{c=1}{\Longrightarrow}\; a = -\tfrac{1}{2},\; b = 0.
+\]
+\begin{answer}
+    $\vb{l}_1 = (-1,\,-1,\,1)^T$, \quad $\vb{l}_2 =
+    \left(-\tfrac{1}{2},\,0,\,1\right)^T$.
+\end{answer}
+
+\task{(c)}{Verify $\vb{l}_2 \sim (H^{-1})^T\vb{l}_1$}
+
+Use $H^{-1} = \frac{1}{\det H}\operatorname{adj}(H)$ with
+\[
+    \det H = 2,\qquad
+    \operatorname{adj}(H) = \vect{1&-1&0\\1&1&-2\\0&0&2}
+    \;\Longrightarrow\;
+    H^{-1} = \frac{1}{2}\vect{1&-1&0\\1&1&-2\\0&0&2},\quad
+    (H^{-1})^T = \frac{1}{2}\vect{1&1&0\\-1&1&0\\0&-2&2}.
+\]
+Then
+\[
+    (H^{-1})^T\vb{l}_1
+    = \frac{1}{2}\vect{1&1&0\\-1&1&0\\0&-2&2}\vect{-1\\-1\\1}
+    = \frac{1}{2}\vect{-2\\0\\4}
+    = \vect{-1\\0\\2}
+    \sim \vect{-\tfrac{1}{2}\\0\\1}.
+\]
+\begin{answer}
+    $(H^{-1})^T\vb{l}_1 = (-1,0,2)^T \sim \vb{l}_2$, so the two lines
+    are the same up to scale.
+\end{answer}
+
+% =====================================================================
+\exercise{5}
+
+\task{}{Lines transform with $(H^{-1})^T$}
+
+Assume $\vb{x}$ lies on $\vb{l}_1$ and let $\vb{y} \sim H\vb{x}$. Then
+\[
+    \vb{l}_1^T\vb{x} = 0
+    \;\Longrightarrow\;
+    \vb{l}_1^T H^{-1}\underbrace{H\vb{x}}_{\vb{y}} = 0
+    \;\Longrightarrow\;
+    \vb{l}_1^T H^{-1}\vb{y} = \left((H^{-1})^T\vb{l}_1\right)^T\vb{y} = 0.
+\]
+Therefore, if we set $\vb{l}_2 \sim (H^{-1})^T\vb{l}_1$, the
+transformed point $\vb{y} \sim H\vb{x}$ belongs to $\vb{l}_2$.
+We can always create the inverse of $H$ because a projective
+transformation is always reversible.
+\begin{answer}
+    $\vb{l}_2 \sim (H^{-1})^T\vb{l}_1$.
+\end{answer}
+
+% =====================================================================
+\exercise{6}
+
+$H_1 = \vect{1&1&\sqrt{2}\\-1&1&1\\0&0&\sqrt{2}}, H_2 =
+\vect{2&2&1\\-1&1&0\\1&0&2},H_3 = \vect{1&-2&1\\0&1&0\\1&0&1},H_4 =
+\vect{\frac{1}{\sqrt{2}}&0&1\\1&\frac{1}{\sqrt{2}}&0\\0&0&1},$
+
+\task{(a)}{Which are projective transformations?}
+
+\begin{answer}
+    $H_1$, $H_2$ and $H_4$ are projective transformations.
+\end{answer}
+
+\task{(b)}{Which are affine transformations?}
+
+\begin{answer}
+    $H_1$ and $H_4$ are affine.
+\end{answer}
+
+\task{(c)}{Which are similarity transformations?}
+
+rotation matrix.
+\begin{answer}
+    $H_1$.
+\end{answer}
+
+\task{(d)}{Which are Euclidean transformations?}
+\begin{answer}
+    $H_1$.
+\end{answer}
+
+\task{(e)}{Which of the transformations preserve lengths between points?}
+\begin{answer}
+    Only $H_1$ (Euclidean).
+\end{answer}
+
+\task{(f)}{Which map lines to lines?}
+\begin{answer}
+    $H_1$, $H_2$ and $H_4$
+\end{answer}
+
+\task{(g)}{Which map parallel lines to parallel lines?}
+\begin{answer}
+    $H_1$ and $H_4$.
+\end{answer}
+
+% =====================================================================
+\exercise{7}
+
+The camera equation is $\lambda\vb{x} = P\vb{X}$, with
+\[
+    P = \vect{1&0&0&0\\0&1&0&0\\0&0&1&-1},\qquad
+    \vb{X}_1 = \vect{1\\-1\\2\\1},\quad
+    \vb{X}_2 = \vect{-2\\2\\1\\1},\quad
+    \vb{X}_3 = \vect{1\\2\\3\\1}.
+\]
+
+\task{(a)}{Projections}
+
+\[
+    P\vb{X}_1 = \vect{1\\-1\\1},\qquad
+    P\vb{X}_2 = \vect{-2\\2\\0},\qquad
+    P\vb{X}_3 = \vect{1\\2\\2}.
+\]
+The last coordinate of $P\vb{X}_2$ is $0$, so its projection is a
+vanishing point.
+\begin{answer}
+    $\vb{x}_1 \sim (1,-1,1)^T$, \quad $\vb{x}_2 \sim (-2,2,0)^T$
+    (vanishing point), \quad $\vb{x}_3 \sim (1,2,2)^T$.
+\end{answer}
+
+\task{(b)}{Camera center}
+
+The camera center is the point that projects to $\vb{0}$:
+\[
+    \vect{0\\0\\0} = \vect{X_1\\X_2\\X_3-1}
+    \;\Longrightarrow\; X_1 = 0,\; X_2 = 0,\; X_3 = 1.
+\]
+\begin{answer}
+    The camera center is $C = (0,\,0,\,1)$.
+\end{answer}
+
+\task{(c)}{Principal axis}
+
+The points on the principal axis project to the image center $(0,0,1)^T$:
+\[
+    \vect{0\\0\\1} = \vect{X_1\\X_2\\X_3-1}
+    \;\Longrightarrow\; X_1 = 0,\; X_2 = 0,\; X_3 = 2.
+\]
+So the axis goes through $C=(0,0,1)$ and $(0,0,2)$.
+\begin{answer}
+    The principal axis is the line through $(0,0,1)$ with direction
+    $(0,\,0,\,1)$.
+\end{answer}
+
+% =====================================================================
+\exercise{8}
+
+Let $\vb{x} \in \PP^2$ and $P_1 = [I\;\vb{0}]$.
+
+\task{(a)}{Points that project to $\vb{x}$}
+
+\[
+    \vb{x} \sim P_1\vb{U} = [I\;\vb{0}]\,\vb{U}.
+\]
+Write $\vb{U} = (x_1',\,x_2',\,x_3',\,s')^T$. Then
+\[
+    P_1\vb{U} = \vect{x_1'\\x_2'\\x_3'} = \vect{x_1\\x_2\\x_3}
+    \;\Longrightarrow\;
+    \vb{U} \sim \vect{\vb{x}\\ s}.
+\]
+The $\vb{U}$ is a collection of points that creates a line in 3 dimensions.
+It's not possible to know the value of $s$ from the information of
+$P_1$ because the part that multiplies with $s$ is zero in this matrix.
+\begin{answer}
+    $\vb{U}(s) = (\vb{x}^T,\, s)^T$ projects to $\vb{x}$ for
+    every $s \in \RR$, and this is a collection of points in 3
+    dimensions that creates a line. It's not possible to know the
+    value of $s$ by the matrix $P_1$.
+\end{answer}
+
+\task{(b)}{The $s$ that puts $\vb{U}(s)$ in the plane}
+
+Assume $\vb{U}$ belongs to the plane $\Pi = (\pi^T,\,1)^T$:
+\[
+    \Pi^T\vb{U}(s) = 0
+    \;\Longrightarrow\;
+    \pi^T\vb{x} + s = 0
+    \;\Longrightarrow\;
+    s = -\pi^T\vb{x}.
+\]
+\begin{answer}
+    $s = -\pi^T\vb{x}$, \quad i.e.\ \ $\vb{U}(s) =
+    \vect{\vb{x}\\ -\pi^T\vb{x}}$.
+\end{answer}
+
+\task{(c)}{The homography $H = R - \vb{t}\pi^T$}
+
+Given $\vb{x} \sim P_1\vb{U}$, $\vb{y} \sim P_2\vb{U}$ with $P_2 =
+[R\;\vb{t}]$, and $\Pi^T\vb{U} = 0$:
+\[
+    \vb{y} \sim P_2\vb{U}(s)
+    = [R\;\vb{t}]\vect{\vb{x}\\ -\pi^T\vb{x}}
+    = R\vb{x} - \vb{t}\pi^T\vb{x}
+    = \left(R - \vb{t}\pi^T\right)\vb{x}.
+\]
+\begin{answer}
+    $\vb{y} \sim H\vb{x}$ with $H = R - \vb{t}\pi^T$, so $H$ maps
+    $\vb{x}$ to $\vb{y}$. \hfill$\square$
+\end{answer}
+
+\end{document}

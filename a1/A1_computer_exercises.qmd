@@ -114,7 +114,6 @@ def plot_points_3D(points: np.ndarray, ax=None, **kwargs):
         Additional keyword arguments passed to ax.scatter3D() to customize the 
         appearance of the points, such as `c`, `marker` and `s`.
     """
-    fig = plt.figure()
     if not ax:
         fig = plt.figure()
         ax = fig.add_subplot(projection="3d")
@@ -221,11 +220,11 @@ def point_line_distance_2D(point, line):
         The distance between the point and line.
 
     """
-
+    
     # Your code here
-    distance = np.abs(point.T@line)/np.sqrt(np.sum(line**2))
+    distance = np.abs(point.T@line)/(np.linalg.norm(line[:2]))
 
-    return distance
+    return distance[0,0]
 ```
 
 ```{python}
@@ -357,7 +356,6 @@ def plot_camera(camera_matrix, s,ax=None,**kwargs ):
 # Plot the 3D-points in U. Also plot the camera centers and principal axes in the same 3D plot.
 
 # Your code here
-#print(U)
 fig = plt.figure(figsize = (8,8))
 ax =fig.add_subplot(projection="3d")
 ax.set_aspect('equal')
@@ -424,6 +422,7 @@ fig.show()
 #
 The origin in these coordinates is in the top left corner which is the standard way to show where the pixels are located in pictures.
 
+
 To be able to use the formulas derived in Theoretical Exercise 8, we must first ensure that we have calibrated cameras.
 To do this, normalize the corner points by multiplying with $K^{-1}$ and plot them in a new 2D-figure. Use `ax.yaxis.set_inverted(True)` to make the y-axis point downwards (as for the previous image) and set equal aspect ratio.
 Note the difference in scale compared to the previous figure. **Where is the origin of the image coordinate system located?**
@@ -443,7 +442,7 @@ fig.show()
 
 #### Your answer here: 
 #
-Here the origin has moved to around the middle of the picture and we can interpret this position as the cameras position when it took the picture.
+Here the origin has moved to around the middle of the picture and this is called the principal point, and this is the point where the principal axis cross the image plane.
 
 Since the inner parameters $K$ have been removed our calibrated camera is $[I \ 0]$.
 Using the results from Theoretical Exercise 8, compute the 3D points in the plane `v` that project onto the corner points.
@@ -454,17 +453,13 @@ Compute the camera center and principal axis, and plot together with the 3D-poin
 # Your code here
 
 pi  = pflat(v)[:3]
-#print(pi.shape)
-#print(corrected_corners.shape)
 lamb= -pi.T@corrected_corners
 corners_3D = corrected_corners/lamb
-#print(real_world_corners)
 
 
 # Compute the camera center and principal axis for camera 1, and plot the camera together with the 3D points
 # Your code here
 p_1 = np.hstack((np.identity(3),np.zeros(3).reshape(3,1)))
-#camera_center, principal_axis=camera_center_and_axis(p_1)
 
 fig = plt.figure(figsize = (8,8))
 ax =fig.add_subplot(projection="3d")
@@ -472,11 +467,11 @@ ax.set_aspect('equal')
 plot_points_3D(corrected_corners, ax = ax, color="red", s=10, alpha=1, label="image corners")
 plot_points_3D(corners_3D, ax = ax, color="blue", s=10, alpha=1, label="real world corners")
 plot_camera(p_1,2, ax = ax, label="Camera 1", color= "orange")
-#ax.view_init(90,0, vertical_axis ='x')
 fig.legend()
 fig.show()
 
 ```
+This looks reasonable!
 
 Next, compute a new camera with camera center in $(2.5,0,0)$ (2.5 units to the right of $P_1$)
 and orientation 
@@ -499,6 +494,7 @@ t = -r@np.array([2.5,0,0]).reshape(3,1)
 p_2 = np.hstack((r,t))
 
 camera_center,axis = camera_center_and_axis(p_2)
+print(f"P2 -  camera center: \n{camera_center} \n axis:\n {axis}")
 
 # Print the camera matrix
 print(f"Camera matrix 2:\n{p_2}")
@@ -511,6 +507,7 @@ plot_points_3D(corners_3D, ax=ax, s=20)
 plot_camera(p_1, 1, ax=ax)
 plot_camera(p_2, 1, ax=ax)
 ax.set_box_aspect((1, 1, 1))
+axis3D_equal()
 plt.show()
 
 # Your code here 
@@ -554,7 +551,7 @@ plt.show()
 
 #### Your answer here: 
 #
-Yes I think they do, because we have a picture from the side, the corners further away should get a smalled distance between them and the corners closer to the cameras position should have a larger distance between them.
+Yes I think they do, because we have a picture from the side, the corners further away should get a smalled distance between them and the corners closer to the cameras position should have a larger distance between them. As we see in the printed out text, the the two different methods gives the same result.
 
 We now have a homography that takes normalized points in the first camera and transforms them to normalized points in the second camera.
 To remove the need for normalization we simply include the normalization in the homography.
