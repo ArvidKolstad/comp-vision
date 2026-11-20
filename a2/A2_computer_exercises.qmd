@@ -138,10 +138,6 @@ ax.scatter(*projected_points[:-1] , label = "projected_points", color="red", s=5
 ax.set_aspect("equal")
 fig.legend()
 plt.show()
-
-
-
-
 ```
 
 #### Your answer here: 
@@ -188,7 +184,7 @@ ax = fig.add_subplot(projection="3d")
 ax.scatter(*X[:-1,:], s = 0.09,color="blue", label="original points")
 ax.scatter(*X_1[:-1,:], s = 0.09,color="red", label=r"$T_1$")
 for i in range(n_pics):
-    plot_camera(camera_matrix = P[i],scale=3,ax = ax)
+    plot_camera(camera_matrix = P[i]@np.linalg.inv(T_1),scale=3,ax = ax)
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
@@ -204,7 +200,7 @@ ax = fig.add_subplot(projection="3d")
 ax.scatter(*X[:-1,:], s = 0.09,color="blue", label="original points")
 ax.scatter(*X_2[:-1,:], s = 0.09,color="red", label=r"$T_2$")
 for i in range(n_pics):
-    plot_camera(camera_matrix = P[i],scale=3,ax = ax)
+    plot_camera(camera_matrix = P[i]@np.linalg.inv(T_2),scale=3,ax = ax)
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
@@ -263,6 +259,8 @@ def project_and_plot(P, Xs, xs, image):
     ax.scatter(*camera0_x[:-1], label = "actuall points", color ="blue", s=5, alpha=0.8)
     ax.scatter(*projected_points[:-1] , label = "projected_points", color="red", s=5, alpha= 0.8)
 
+    ax.set_xlim(0,image.shape[1])
+    ax.set_ylim(image.shape[0],0)
     ax.set_aspect("equal")
     fig.legend()
     plt.show()
@@ -369,7 +367,7 @@ for idx,ax in enumerate(axs):
     ax.scatter(normalized_points[0],normalized_points[1],label ="Normalized_points")
     print(f"Camera {idx} verification: mean = ({np.mean(normalized_points[0]):.2f}, {np.mean(normalized_points[1]):.2f}), standard deviation = ({np.std(normalized_points[0]):.2f},{np.std(normalized_points[1]):.2f})")
     ax.set_xlabel("x")
-    ax.set_xlabel("y")
+    ax.set_ylabel("y")
     ax.set_title(f"Camera {idx}")
     ax.legend()
 
@@ -495,10 +493,19 @@ im22  = plt.imread("./figs/cube2.JPG")
 images= [im21,im22]
 n_points = image_points[0].shape[1]
 X_homo = np.vstack((X_3d,np.ones(n_points).reshape(1,n_points)))
-for idx, ax in enumerate(axs): 
+for idx in range(2): 
 
     P = np.linalg.inv(N_matrices[idx])@P_matrices[idx]
     project_and_plot(P,X_homo,image_points[idx],images[idx])
+
+
+fig = plt.figure()
+ax = fig.add_subplot(projection="3d")
+ax.scatter(*X_3d, s=5)
+for idx in range(2):
+    plot_camera(np.linalg.inv(N_matrices[idx]) @ P_matrices[idx], 3, ax=ax)
+ax.set_aspect("equal")
+plt.show()
 ```
 
 ### Your answer here: 
@@ -522,12 +529,20 @@ When you have achieved satisfactory results, save the camera matrices (for both 
 
 ```{python}
 # ------ Your code here ------
+def get_K_matrix(P):
 
-K,R=scipy.linalg.rq(P_matrices[0][:,:-1])
-N =np.diag(np.sign(np.diag(K)))
-k_22 = K[2,2]
-print(n_22)
-print(K@N/np.abs(k_22))
+    K,R=scipy.linalg.rq(P[:,:-1])
+    sign =np.diag(np.sign(np.diag(K)))
+    k_22 = K[2,2]
+    return K@sign/np.abs(k_22)
+
+
+Ps = np.array([np.linalg.inv(N_matrices[idx])@P_matrices[idx] for idx in range(2)])
+print(get_K_matrix(Ps[0]))
+
+K_matrices = [get_K_matrix(Ps[0]),get_K_matrix(Ps[1])]
+
+
 
 
 
@@ -579,7 +594,7 @@ def e_rms(x_measured, x_projected):
         where ||·||_F is the Frobenius norm.
     """
     N = x_measured.shape[1]
-    rms_error = np.sqrt( (1/N) * np.linalg.norm(x_measured - x_projected, ord ="fro"))
+    rms_error = np.sqrt( (1/N) * np.linalg.norm(x_measured - x_projected, ord ="fro")**2)
     return rms_error
 
 
@@ -602,13 +617,13 @@ image_points = data["x"][0]
 n_points = image_points[0].shape[1]
 X_homo = np.vstack((X_3d,np.ones(n_points).reshape(1,n_points)))
 
-P_matrices = []
 for idx in range(2):
     normalized_points= pflat(compare_N[idx]@image_points[0])[:-1]
     print()
     p = estimate_camera_DLT(normalized_points.T,X_3d.T)
     projected_2d = pflat(np.linalg.inv(compare_N[idx])@p@X_homo)
-    print(e_rms(image_points[0],pflat(projected_2d)))
+    print(f"RMSE: {e_rms(image_points[0],pflat(projected_2d)):.4f}")
+
 
 ```
 
@@ -617,7 +632,7 @@ for idx in range(2):
 
 (*Include answers to all questions marked in bold.*)
 #
-The difference is not that big but the normalized points have a bit more than 0.1 better position so it might still be good to do!
+The difference is around 1.3 which is better so normalization clearly helps a bit.
 
 Now repeat the resectioning experiments (with and without normalization), but this time estimate the camera using only points number $1,4,13,16,25,28,31$. Still, measure the RMS error in a unified way, always using all points!.
 
@@ -629,22 +644,20 @@ Now repeat the resectioning experiments (with and without normalization), but th
 compare_N = [N_matrices[0], np.identity(3)]
 data = scipy.io.loadmat("./data/compEx2data.mat")
 
-index_points = np.array([0,3,12,16,25,28,31])
+index_points = np.array([0,3,12,15,24,27,30])
 
 image_points = data["x"][0]
 
-image_points = image_points[0][:,index_points]
-X_3d = data["Xmodel"][:,index_points]
-n_points = image_points.shape[1]
-X_homo = np.vstack((X_3d,np.ones(n_points).reshape(1,n_points)))
+sampled_image_points = image_points[0][:,index_points]
+X_3d_samples = data["Xmodel"][:,index_points]
+n_samples = len(index_points)
 
-P_matrices = []
 for idx in range(2):
-    normalized_points= pflat(compare_N[idx]@image_points)[:-1]
+    normalized_points= pflat(compare_N[idx]@sampled_image_points)[:-1]
     print()
-    p = estimate_camera_DLT(normalized_points.T,X_3d.T)
+    p = estimate_camera_DLT(normalized_points.T,X_3d_samples.T)
     projected_2d = pflat(np.linalg.inv(compare_N[idx])@p@X_homo)
-    print(e_rms(image_points,pflat(projected_2d)))
+    print(f"RMSE: {e_rms(image_points[0],pflat(projected_2d)):.4f}")
 
 ```
 
@@ -652,7 +665,7 @@ for idx in range(2):
 
 (*Include answers to all questions marked in bold.*)
 #
-Here the error is much larger and the error for the first comparison even decreased (might be that the measurements from the other points were draging up the error) so this makes normalization much better than the un-normalized.
+Here the error is much larger and the error for the the first is just a litle bit worse so this makes normalization much better than the un-normalized.
 
 # Feature Extraction and Matching using SIFT
 
@@ -686,8 +699,8 @@ and the descriptor in `descriptors1` encodes local image information around that
 # ------ Your code here ------
 
 # load images in greyscale
-cube1_grey =cv2.imread("./figs/cube1.JPG", cv2.IMREAD_GRAYSCALE)
-cube2_grey =cv2.imread("./figs/cube2.JPG", cv2.IMREAD_GRAYSCALE)
+cube1_grey =cv2.imread("./data/cube1.JPG", cv2.IMREAD_GRAYSCALE)
+cube2_grey =cv2.imread("./data/cube2.JPG", cv2.IMREAD_GRAYSCALE)
 
 # compute keypoints and descriptors for both images
 sift = cv2.SIFT_create(contrastThreshold=0.01)
@@ -737,8 +750,18 @@ Otherwise, both matches are almost equally good, the match is ambiguous, and we 
 # ------ Your code here ------
 
 # Compute matches between descriptors1 and descriptors2
+bf = cv2.BFMatcher(cv2.NORM_L2)
+matches = bf.knnMatch(descriptors1,descriptors2, k=2)
 
 # Apply Lowe's ratio test to filter out the ambiguous mathes
+
+saved_points=[]
+for point in matches:
+    m,n=point 
+    if m.distance < 0.75*n.distance:
+        saved_points.append(m)
+
+print(f"Saved points: {len(saved_points)}")
 ```
 
 ### Task 3.3
@@ -763,16 +786,40 @@ im_matches = cv2.drawMatchesKnn(im1, keypoints1,
 
 ```{python}
 # ------ Your code here ------
-
+im_cube1 = cv2.imread("./data/cube1.JPG")
+im_cube2 = cv2.imread("./data/cube2.JPG")
 # Extract matching points
 
+
+x1 = np.array([keypoints1[m.queryIdx].pt for m in saved_points]).T
+x2 = np.array([keypoints2[m.trainIdx].pt for m in saved_points]).T
+
+n_points=x1.shape[1]
+
+
+gen = np.random.default_rng(seed=42)
+
+sampled_points = gen.choice(saved_points,size=10, replace=False)
+
+
 # Plot matching points on the two images
+
+im_matches = cv2.drawMatches(im_cube1, keypoints1,
+                                im_cube2, keypoints2,
+                                sampled_points, None,
+                                flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+plt.figure(figsize=(15, 8))
+plt.imshow(im_matches)   # cv2 loads BGR, so convert for matplotlib
+plt.show()
 ```
+
 
 ### Your answer here: 
 
 (*Include answers to all questions marked in bold.*)
 #
+All 10 except the pink one (the point highest up in the picture)
 
 # Triangulation using DLT
 
@@ -801,7 +848,25 @@ def triangulate_3D_point_DLT(x1, x2, P1, P2):
         X : ndarray, (4, ) 
             Estimated 3D point in homogeneous coordinates.
     """
+
     # Your code here
+    M_camera =np.vstack((P1,P2))
+    x_1_homo = np.append(x1,1.0)
+    x_2_homo = np.append(x2,1.0)
+    M_image_coords = np.vstack(
+        (np.hstack(
+            (-x_1_homo,np.zeros(3))),
+        np.hstack(
+                (np.zeros(3),-x_2_homo)))).T
+    
+    
+    M = np.hstack((M_camera,M_image_coords))
+
+    _,_,Vt = np.linalg.svd(M)
+    
+    X= Vt.T[:4,-1]
+    return X
+    
 ```
 
 Project the computed points into the two images and compare with the corresponding SIFT-points in a 2D plot.
@@ -810,8 +875,18 @@ Project the computed points into the two images and compare with the correspondi
 # ------ Your code here ------
 
 # Compute the 3D points
+images= [im21,im22]
+
+image_coordinates = [np.vstack((x1,np.ones(n_points))),np.vstack((x2,np.ones(n_points)))]
+
+Ps = np.array([np.linalg.inv(N_matrices[idx])@P_matrices[idx] for idx in range(2)])
+Xs = pflat(np.array([triangulate_3D_point_DLT(point1,point2,Ps[0],Ps[1]) for point1, point2 in zip(x1.T,x2.T)]).T)
+
 
 # Project the computed points into the two images
+
+for i in range(2):
+    project_and_plot(Ps[i],Xs,image_coordinates[i],images[i])
 ```
 
 ### Task 4.2
@@ -820,6 +895,17 @@ Just as when normalizing with $N$ (based on mean/std) for the resection problem 
 
 ```{python}
 # ------ Your code here ------
+K_inv = [np.linalg.inv(K) for K in K_matrices]
+Ps_norm = np.array([K_inv[idx]@np.linalg.inv(N_matrices[idx])@P_matrices[idx] for idx in range(2)])
+x1_norm = K_inv[0]@image_coordinates[0]
+x2_norm = K_inv[1]@image_coordinates[1]
+x_norm = [x1_norm,x2_norm]
+Xs_norm = pflat(np.array([triangulate_3D_point_DLT(point1[:-1],point2[:-1],Ps_norm[0],Ps_norm[1]) for point1, point2 in zip(x1_norm.T,x2_norm.T)]).T)
+
+# Project the computed points into the two images
+
+for i in range(2):
+    project_and_plot(K_matrices[i]@Ps_norm[i],Xs_norm,K_matrices[i]@x_norm[i],images[i])
 ```
 
 ### Task 4.3
@@ -835,9 +921,48 @@ Plot the remaining 3D points, the cameras and the cube model in one and the same
 
 ```{python}
 # ------ Your code here ------
+
+
+X_3d = data["Xmodel"]
+projected_x_camera0=pflat(K_matrices[0]@Ps_norm[0]@Xs_norm)
+projected_x_camera1=pflat(K_matrices[1]@Ps_norm[1]@Xs_norm)
+sift_x_camera0= pflat(K_matrices[0]@x_norm[0])
+sift_x_camera1 = pflat(K_matrices[1]@x_norm[1])
+
+#all_points_projected= np.hstack((projected_x_camera0,projected_x_camera1))
+all_points_sift = np.hstack((sift_x_camera0,sift_x_camera1))
+
+average_pixel_error_camera_0 = np.mean(np.linalg.norm(projected_x_camera0 - sift_x_camera0, axis=0))
+average_pixel_error_camera_1 = np.mean(np.linalg.norm(projected_x_camera1 - sift_x_camera1, axis=0))
+
+print(f"Average pixel error camera 0: {average_pixel_error_camera_0:.3f}")
+print(f"Average pixel error camera 1: {average_pixel_error_camera_1:.3f}")
+
+err0 =np.linalg.norm(projected_x_camera0 - sift_x_camera0, axis = 0)<=3
+err1=np.linalg.norm(projected_x_camera1 - sift_x_camera1, axis = 0)<=3 
+mask = err0 & err1
+X_best = Xs_norm[:,mask]
+
+
+fig = plt.figure()
+ax = fig.add_subplot(projection="3d")
+plot_camera(Ps[0],3, ax = ax)
+plot_camera(Ps[1],3, ax = ax)
+ax.scatter(*X_best[:-1], s= 0.1, label="SIFT")
+ax.scatter(*X_3d,color="red" ,s= 5, label ="Cube corners")
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+ax.set_zlabel("Z")
+ax.set_aspect("equal")
+ax.set_xlim(-20,20)
+ax.set_ylim(-20,20)
+ax.set_zlim(-20,20)
+fig.legend()
+plt.show()
 ```
 
 ### Your answer here: 
 
 (*Include answers to all questions marked in bold.*)
 #
+Yes you can see that the text is there and also a surface that resembles the mug
