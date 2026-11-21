@@ -1,0 +1,404 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+
+% ---------- Notation ----------
+\newcommand{\vb}[1]{\mathbf{#1}}
+\newcommand{\vect}[1]{
+    \begin{pmatrix}#1
+\end{pmatrix}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\RR}{\mathbb{R}}
+
+% ---------- Consistent layout ----------
+% Every exercise:      \exercise{n}
+% Every sub-question:  \task{label}{short description}
+% Every final result:  \begin{answer} ... \end{answer}
+\newcommand{\exercise}[1]{
+\section*{Exercise #1}}
+\newcommand{\task}[2]{
+\subsection*{#1\quad\normalfont\textit{#2}}}
+\newtcolorbox{answer}{colback=gray!8,colframe=gray!60,boxrule=0.5pt,
+    arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+fontupper=\normalsize,before upper={\textbf{Answer.}\ }}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\title{Assignment 2 -- Theoretical Exercises}
+\author{Computer Vision, 2026 \\ Arvid Kolstad}
+\date{}
+
+\begin{document}
+\maketitle
+
+% =====================================================================
+\exercise{1}
+
+\task{}{Projective ambiguity for uncalibrated cameras}
+
+Start from the camera equation and insert the identity $T^{-1}T = I$,
+where $T$ is any
+projective transformation of 3D space (an invertible $4\times 4$ matrix):
+\[
+    \lambda\vb{x} = P\vb{X} = P\left(T^{-1}T\right)\vb{X}.
+\]
+If we set
+\[
+    \tilde{P} = PT^{-1} \qquad\text{and}\qquad \tilde{\vb{X}} = T\vb{X},
+\]
+we have
+\[
+    \lambda\vb{x} = P\vb{X} = \tilde{P}\tilde{\vb{X}}.
+\]
+Since $T$ is invertible, $\tilde{P}$ is still a $3\times 4$ matrix of
+rank 3, i.e.\ a valid camera.
+With unknown calibration, any such camera is allowed:
+$\tilde{P} = PT^{-1} = K[R\;\vb{t}]\,T^{-1}$. To recover $K$ we would
+use an RQ decomposition
+of $P = [KR\;\;K\vb{t}]$, decomposing $A = KR$. But since $P$ itself
+is unknown, this cannot be done.
+\begin{answer}
+    $(\tilde{P}, \tilde{\vb{X}}) = (PT^{-1},\, T\vb{X})$ gives
+    exactly the same image projections as
+    $(P, \vb{X})$ for every projective transformation $T$. Hence the
+    reconstruction can only be
+    recovered up to an unknown projective transformation of 3D space.
+\end{answer}
+
+% =====================================================================
+\exercise{2}
+
+\task{}{Calibrated cameras and the remaining ambiguity}
+
+For a calibrated camera, with a normalized coordinates, we still
+have a rotation matrix and a translation vector that is unknown.
+We can also scale it how we want without the equation breaking. Therefore
+we reduce the amounts of T:s that allowed to rotations,
+translation and scaling. So there is still ambiguity, but it's less
+than before. To be explicit T is a 4x4 matrix that for the
+constraints of excercise 1 has $4 \dot 4 -1 =
+15$ dimensions of freedom (because of scaling of the matrix makes no
+difference). With these constraints the matrix has 3 from rotations,
+3 from translations and 1 from scaling which equals 7 DOFs.
+
+\begin{answer}
+    The ambiguity goes down from 15 DOFs to 7 DOFs.
+\end{answer}
+
+% =====================================================================
+\exercise{3}
+
+\[
+    K = \vect{f&0&x_0\\0&f&y_0\\0&0&1}.
+\]
+
+\task{(a)}{Verify $K^{-1}$ and the factorization $K^{-1} = AB$}
+
+Use $K^{-1} = \frac{1}{\det K}\operatorname{adj}(K)$, with $\det K =
+f^2$. The cofactor matrix is
+\[
+    \operatorname{adj}(K)^T = \vect{f&0&0\\0&f&0\\-fx_0&-fy_0&f^2}
+    \;\Longrightarrow\;
+    \operatorname{adj}(K) = \vect{f&0&-fx_0\\0&f&-fy_0\\0&0&f^2},
+\]
+so
+\[
+    K^{-1} =
+    \vect{\tfrac{1}{f}&0&-\tfrac{x_0}{f}\\[2pt]0&\tfrac{1}{f}&-\tfrac{y_0}{f}\\[2pt]0&0&1}.
+\]
+Multiplying the factors:
+\[
+    AB =
+    \vect{\tfrac{1}{f}&0&0\\[2pt]0&\tfrac{1}{f}&0\\[2pt]0&0&1}\vect{1&0&-x_0\\0&1&-y_0\\0&0&1}
+    =
+    \vect{\tfrac{1}{f}&0&-\tfrac{x_0}{f}\\[2pt]0&\tfrac{1}{f}&-\tfrac{y_0}{f}\\[2pt]0&0&1}.
+\]
+\begin{answer}
+    Both expressions equal $K^{-1}$, so the inverse and the
+    factorization check out.
+\end{answer}
+
+\task{(b)}{Geometric interpretation of $A$ and $B$}
+
+$A$ only scales the lengths of the current coordinates, by $1/f$ in
+$x$, $1/f$ in $y$ and $1$ in $z$.
+$B$ is a shearing in the $x$- and $y$-direction: the larger the
+$z$-coordinate, the larger the shift in
+the $x$- and $y$-direction.
+\begin{answer}
+    $A$ is a scaling by $1/f$. $B$ shears the $x$- and
+    $y$-coordinates in proportion to $z$.
+\end{answer}
+
+\task{(c)}{Interpretation of $K^{-1}$}
+
+By multiplying with $K^{-1}$ we remove the inner parameters, so that
+the remaining camera only
+depends on rotation and translation, i.e.\ the camera's position and
+orientation.
+Because of this, the principal point ends up in the origin:
+\[
+    K^{-1}\vect{x_0\\y_0\\1} = \vect{x_0/f - x_0/f\\ y_0/f -
+    y_0/f\\ 1} = \vect{0\\0\\1}.
+\]
+A point at distance $f$ from the principal point ends up at distance
+$1$ after normalization:
+\[
+    K^{-1}\vect{x_0+f\\y_0\\1} = \vect{(x_0+f)/f - x_0/f\\ y_0/f -
+    y_0/f\\ 1} = \vect{1\\0\\1}.
+\]
+\begin{answer}
+    $K^{-1}$ removes the inner parameters. The principal point is
+    mapped to the origin $(0,0)$, and
+    a point at distance $f$ from the principal point is mapped to a
+    point at distance $1$ from the origin.
+\end{answer}
+
+\task{(d)}{Normalize $(0,300)$ and $(800,300)$}
+
+With $f = 400$, $x_0 = 400$ and $y_0 = 300$, the formula from (a) gives
+\[
+    K^{-1} =
+    \vect{\tfrac{1}{400}&0&-1\\[2pt]0&\tfrac{1}{400}&-\tfrac{3}{4}\\[2pt]0&0&1}.
+\]
+\[
+    K^{-1}\vect{0\\300\\1} = \vect{-1\\0\\1},\qquad
+    K^{-1}\vect{800\\300\\1} = \vect{1\\0\\1}.
+\]
+\begin{answer}
+    $(0,300) \mapsto (-1,\,0)$, \quad $(800,300) \mapsto (1,\,0)$.
+\end{answer}
+
+\task{(e)}{Angle between the viewing rays}
+
+The viewing rays have the directions of the normalized points,
+$\vb{v}_1 = (-1,0,1)^T$ and $\vb{v}_2 = (1,0,1)^T$. From linear algebra,
+\[
+    \vb{v}_1^T\vb{v}_2 = \|\vb{v}_1\|\,\|\vb{v}_2\|\cos\alpha
+    \quad\text{and}\quad
+    \vb{v}_1^T\vb{v}_2 = -1 + 0 + 1 = 0
+    \;\Longrightarrow\; \cos\alpha = 0.
+\]
+\begin{answer}
+    $\alpha = 90^\circ$.
+\end{answer}
+
+\task{(f)}{Same camera center and principal axis}
+
+\textbf{Camera center.} Let $\vb{X}'$ be in the null space of
+$[R\;\vb{t}]$, i.e.\ $[R\;\vb{t}]\vb{X}' = \vb{0}$. Then
+\[
+    K[R\;\vb{t}]\vb{X}' = K\vb{0} = \vb{0},
+\]
+so $\vb{X}'$ also solves $K[R\;\vb{t}]\vb{X} = \vb{0}$. Conversely,
+since $K$ is invertible,
+$K[R\;\vb{t}]\vb{X}' = \vb{0}$ implies $[R\;\vb{t}]\vb{X}' =
+K^{-1}\vb{0} = \vb{0}$.
+The two cameras therefore have the same null space, i.e.\ the same
+camera center.
+
+\textbf{Principal axis.} The last row of $K$ is $(0,\,0,\,1)$, so the
+last row of
+$K[R\;\vb{t}]$ is the last row of $[R\;\vb{t}]$. With $\vb{t} =
+(t_1,t_2,t_3)^T$, the camera equation
+$\lambda\vb{x} = K[R\;\vb{t}]\vb{X}$ gives
+\[
+    \lambda = R_{31}X + R_{32}Y + R_{33}Z + t_3 .
+\]
+$\lambda$ is the depth in these coordinates, so this equation
+describes planes orthogonal to the
+principal axis, and $(R_{31}, R_{32}, R_{33})$ is the direction of
+the camera. This does not depend
+on $K$ in any way.
+\begin{answer}
+    $K[R\;\vb{t}]$ and $[R\;\vb{t}]$ have the same null space (camera
+    center) and the same last row
+    $(R_{31}, R_{32}, R_{33})$ (principal axis).
+\end{answer}
+
+% =====================================================================
+\exercise{4}
+
+\task{(a)}{Verify the product $KR$}
+
+\[
+    KR = \vect{a&b&c\\0&d&e\\0&0&f}\vect{R_1^T\\R_2^T\\R_3^T}
+    = \vect{aR_1^T + bR_2^T + cR_3^T\\ dR_2^T + eR_3^T\\ fR_3^T}.
+\]
+
+\task{(b)}{$R_3$ and $f$}
+
+\[
+    P =
+    \vect{800\sqrt2&0&2400\sqrt2&8000\\-700\sqrt2&2800&700\sqrt2&9800\\-\sqrt2&0&\sqrt2&6}
+\]
+\[
+    \Longrightarrow\quad
+    KR =
+    \vect{800\sqrt2&0&2400\sqrt2\\-700\sqrt2&2800&700\sqrt2\\-\sqrt2&0&\sqrt2}.
+\]
+The last row gives
+\[
+    f\,(R_{31},\,R_{32},\,R_{33}) = (-\sqrt2,\,0,\,\sqrt2).
+\]
+Since $\|R_3\| = 1$ and $f > 0$, we get $f = \|(-\sqrt2, 0, \sqrt2)\| = 2$.
+\begin{answer}
+    $f = 2$, \quad $R_3^T =
+    \left(-\tfrac{1}{\sqrt2},\,0,\,\tfrac{1}{\sqrt2}\right)$.
+\end{answer}
+
+\task{(c)}{$R_2$, $d$ and $e$}
+
+The second row gives $dR_2^T + eR_3^T = (-700\sqrt2,\,2800,\,700\sqrt2)$, with
+$eR_3^T = e\left(-\tfrac{1}{\sqrt2},0,\tfrac{1}{\sqrt2}\right)$:
+\[
+    \begin{cases}
+        -700\sqrt2 = -\dfrac{e}{\sqrt2} + dR_{21}\\[6pt]
+        2800 = dR_{22}\\[2pt]
+        700\sqrt2 = \dfrac{e}{\sqrt2} + dR_{23}
+    \end{cases}
+\]
+Since $R_3 \perp R_2$, we have $R_3^TR_2 = \tfrac{1}{\sqrt2}(-R_{21}
++ R_{23}) = 0$, so $R_{21} = R_{23}$.
+Adding the first and third equations gives $0 = 2dR_{21}$, so $R_{21}
+= R_{23} = 0$ (since $d > 0$).
+Then $\|R_2\| = 1$ gives $R_{22} = 1$, and therefore $d = 2800$ and $e = 1400$.
+\begin{answer}
+    $R_2^T = (0,\,1,\,0)$, \quad $d = 2800$, \quad $e = 1400$.
+\end{answer}
+
+\task{(d)}{$R_1$, $a$, $b$ and $c$}
+
+Because $R_1 \perp R_2$ and $R_1 \perp R_3$ (with $\det R = 1$),
+$R_1^T = \left(\tfrac{1}{\sqrt2},\,0,\,\tfrac{1}{\sqrt2}\right)$. The
+first row then gives
+\[
+    \begin{cases}
+        800\sqrt2 = \dfrac{a}{\sqrt2} - \dfrac{c}{\sqrt2}\\[6pt]
+        0 = b\\[2pt]
+        2400\sqrt2 = \dfrac{a}{\sqrt2} + \dfrac{c}{\sqrt2}
+    \end{cases}
+    \;\Longrightarrow\;
+    \begin{cases}
+        a - c = 1600\\
+        b = 0\\
+        a + c = 4800
+    \end{cases}
+    \;\Longrightarrow\;
+    a = 3200,\; b = 0,\; c = 1600.
+\]
+\begin{answer}
+    $R_1^T = \left(\tfrac{1}{\sqrt2},\,0,\,\tfrac{1}{\sqrt2}\right)$,
+    \quad $a = 3200$, \quad $b = 0$, \quad $c = 1600$.
+\end{answer}
+
+\task{(e)}{Focal length, skew, aspect ratio and principal point}
+
+\[
+    R =
+    \vect{\tfrac{1}{\sqrt2}&0&\tfrac{1}{\sqrt2}\\[2pt]0&1&0\\[2pt]-\tfrac{1}{\sqrt2}&0&\tfrac{1}{\sqrt2}},
+    \qquad
+    K = \vect{3200&0&1600\\0&2800&1400\\0&0&2}
+    \sim \vect{1600&0&800\\0&1400&700\\0&0&1}.
+\]
+$R$ is a rotation by $45^\circ$ around the $y$-axis. Comparing with
+$K = \vect{\gamma f & s & x_0\\ 0 & f & y_0\\ 0&0&1}$:
+\begin{answer}
+    Focal length $f = 1400$, \quad skew $s = 0$, \quad aspect ratio
+    $\gamma = \tfrac{1600}{1400} = \tfrac{8}{7}$,
+    \quad principal point $(x_0, y_0) = (800,\,700)$.
+\end{answer}
+
+% =====================================================================
+\exercise{5}
+
+\task{(a)}{$\min_{\vb{v}}\|M\vb{v}\|^2$ always has the minimum value $0$}
+
+Since $\|M\vb{v}\|^2 \geq 0$, the smallest possible value is $0$.
+With no constraints on $\vb{v}$
+we can set $\vb{v} = \vb{0}$ and always get $\|M\vb{0}\|^2 = 0$.
+\begin{answer}
+    The minimum is always $0$, attained at $\vb{v} = \vb{0}$.
+\end{answer}
+
+\task{(b)}{$\|M\vb{v}\|^2 = \|\Sigma V^T\vb{v}\|^2$ and $\|V^T\vb{v}\| = 1$}
+
+With $M = U\Sigma V^T$ and $U^TU = I$ (since $U$ is orthogonal):
+\begin{align*}
+    \|M\vb{v}\|^2 &= (M\vb{v})^T(M\vb{v}) = (U\Sigma
+    V^T\vb{v})^T(U\Sigma V^T\vb{v})
+    = \vb{v}^TV\Sigma^T\underbrace{U^TU}_{I}\Sigma V^T\vb{v}\\
+    &= (\Sigma V^T\vb{v})^T(\Sigma V^T\vb{v}) = \|\Sigma V^T\vb{v}\|^2.
+\end{align*}
+If $\|\vb{v}\|^2 = 1$, the same trick with $VV^T = I$ (since $V$ is
+orthogonal) gives
+\[
+    \|V^T\vb{v}\| = \sqrt{\vb{v}^TVV^T\vb{v}} = \sqrt{\vb{v}^T\vb{v}}
+    = \|\vb{v}\| = 1,
+\]
+where we take the positive root since a length cannot be negative.
+\begin{answer}
+    $\|M\vb{v}\|^2 = \|\Sigma V^T\vb{v}\|^2$, and $\|V^T\vb{v}\| =
+    \|\vb{v}\| = 1$.
+\end{answer}
+
+\task{(c)}{The equivalent problem
+$\min_{\|\tilde{\vb{v}}\|^2=1}\|\Sigma\tilde{\vb{v}}\|^2$}
+
+$\Sigma$ has the singular values $\sigma_1 \geq \sigma_2 \geq \dots
+\geq 0$ on its diagonal.
+Since $V^T$ is orthogonal, we can see $\tilde{\vb{v}} = V^T\vb{v}$ as
+a change of coordinates which
+preserves length, so $\|\tilde{\vb{v}}\| = 1$ exactly when
+$\|\vb{v}\| = 1$. Together with
+$\|M\vb{v}\|^2 = \|\Sigma\tilde{\vb{v}}\|^2$, the two problems take
+the same values, so they have the
+same minimal value. To get the actual vector back, we transform
+$\tilde{\vb{v}}^* \to \vb{v}^*$ with
+$V$, i.e.\ $\vb{v}^* = V\tilde{\vb{v}}^*$.
+
+We can see that there must also be at least two different solutions
+to this problem when considering that the negative version of the
+same vector must have the same answer because of the fact that the
+norm of a vector scaled by -1 is the same as.
+\begin{answer}
+    (12) and (9) have the same minimal value, and $\vb{v}^* =
+    V\tilde{\vb{v}}^*$. Concider the scaling -1 of the vector to
+    always get a second solution.
+\end{answer}
+
+\task{(d)}{The last column of $V$ solves (9)}
+
+Because the singular values in $\Sigma$ are in decreasing order,
+$\tilde{\vb{v}} = (0,\dots,0,1)^T$
+is a solution to (12). This means that
+\[
+    \vb{v}^* = V\vect{0\\ \vdots\\ 0\\ 1} = \text{the last column of } V,
+\]
+which is therefore our explicit solution to (9).
+we use the projection
+
+\begin{answer}
+    The last column of $V$ is a solution to (9).
+\end{answer}
+
+% =====================================================================
+\exercise{6}
+
+\task{}{Camera for the original problem}
+
+\[
+    \tilde{\vb{x}} \sim N\vb{x}
+    \;\Longrightarrow\;
+    \vb{x} \sim N^{-1}\tilde{\vb{x}} \sim N^{-1}\tilde{P}\vb{X},
+\]
+and comparing with $\vb{x} \sim P\vb{X}$:
+\begin{answer}
+    $P = N^{-1}\tilde{P}$.
+\end{answer}
+
+\end{document}

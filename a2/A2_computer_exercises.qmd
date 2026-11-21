@@ -360,7 +360,7 @@ for idx, camera_points in enumerate(image_points):
     N_matrices.append(N)
 
 
-fig, axs = plt.subplots(1,2, figsize=(8,13))
+fig, axs = plt.subplots(1,2, figsize=(13,8))
 
 for idx,ax in enumerate(axs):
     normalized_points= pflat(N_matrices[idx]@image_points[idx])
@@ -538,7 +538,7 @@ def get_K_matrix(P):
 
 
 Ps = np.array([np.linalg.inv(N_matrices[idx])@P_matrices[idx] for idx in range(2)])
-print(get_K_matrix(Ps[0]))
+print(f"K:{get_K_matrix(Ps[0])}")
 
 K_matrices = [get_K_matrix(Ps[0]),get_K_matrix(Ps[1])]
 
@@ -862,7 +862,7 @@ def triangulate_3D_point_DLT(x1, x2, P1, P2):
     
     M = np.hstack((M_camera,M_image_coords))
 
-    _,_,Vt = np.linalg.svd(M)
+    _,_,Vt = np.linalg.svd(M, full_matrices =False)
     
     X= Vt.T[:4,-1]
     return X
